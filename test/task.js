@@ -36,7 +36,7 @@ describe('Task', () => {
       baseDir: tempDir
     });
 
-    task.setup().then(() => {
+    task.init().then(() => {
       expect(update).to.have.been.calledOnce;
       done();
     });
@@ -53,7 +53,7 @@ describe('Task', () => {
       baseDir: tempDir
     });
 
-    task.setup().then(() => {
+    task.init().then(() => {
       expect(update).to.have.been.calledWithExactly('index', filePath, undefined);
       done();
     });
@@ -70,7 +70,7 @@ describe('Task', () => {
       baseDir: tempDir
     });
 
-    task.setup().then(() => {
+    task.init().then(() => {
       fs.writeFileSync(filePath, 'tested');
 
       task.on('done', () => {
@@ -92,7 +92,7 @@ describe('Task', () => {
       baseDir: tempDir
     });
 
-    task.setup().then(() => {
+    task.init().then(() => {
       fs.writeFileSync(filePathB, 'test');
 
       task.watcher.on('add', () => {
@@ -114,7 +114,7 @@ describe('Task', () => {
       baseDir: tempDir
     });
 
-    task.setup().then(() => {
+    task.init().then(() => {
       fs.unlinkSync(filePath);
 
       task.watcher.on('unlink', () => {
@@ -136,7 +136,7 @@ describe('Task', () => {
       baseDir: tempDir
     });
 
-    task.setup().then(() => {
+    task.init().then(() => {
       expect(update).to.have.been.calledWithExactly('index', filePath, 'test');
       done();
     });
@@ -157,7 +157,7 @@ describe('Task', () => {
       baseDir: tempDir
     });
 
-    task.setup().then(() => {
+    task.init().then(() => {
       expect(spy).to.have.been.calledWithExactly(thisArg);
       done();
     });
