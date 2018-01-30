@@ -1,39 +1,38 @@
 /* eslint-env mocha */
 /* eslint-disable no-unused-expressions */
 
-const fs = require('fs');
 const path = require('path');
 const chai = require('chai');
 const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
-const tempy = require('tempy');
 const del = require('del');
 const Task = require('../lib/task');
+const factory = require('./lib/file');
 
 chai.use(sinonChai);
 const expect = chai.expect;
 
 describe('Task', () => {
-  let tempDir;
+  let create;
   let task;
 
   before(() => {
-    tempDir = tempy.directory();
+    create = factory();
   });
 
   afterEach(() => {
     task.stop();
-    return del(path.join(tempDir, '**/*'), {force: true});
+    return del(path.join(create.dir, '**/*'), {force: true});
   });
 
   it('calls the update function immediately', done => {
-    fs.writeFileSync(path.join(tempDir, 'index.html'), 'test');
+    const file = create('index.html');
     const update = sinon.spy();
     task = new Task({
       pattern: '*.*',
       update
     }, {
-      baseDir: tempDir
+      baseDir: file.dir
     });
 
     task.init().then(() => {
@@ -43,35 +42,33 @@ describe('Task', () => {
   });
 
   it('calls the update function with a name and file path', done => {
-    const filePath = path.join(tempDir, 'index.html');
-    fs.writeFileSync(filePath, 'test');
+    const file = create('index.html', 'test');
     const update = sinon.spy();
     task = new Task({
       pattern: '*.*',
       update
     }, {
-      baseDir: tempDir
+      baseDir: file.dir
     });
 
     task.init().then(() => {
-      expect(update).to.have.been.calledWithExactly('index', filePath, undefined);
+      expect(update).to.have.been.calledWithExactly('index', file.path, undefined);
       done();
     });
   });
 
   it('calls the update function when a file changes', done => {
-    const filePath = path.join(tempDir, 'index.html');
-    fs.writeFileSync(filePath, 'test');
+    const file = create('index.html', 'test');
     const update = sinon.spy();
     task = new Task({
       pattern: '*.*',
       update
     }, {
-      baseDir: tempDir
+      baseDir: file.dir
     });
 
     task.init().then(() => {
-      fs.writeFileSync(filePath, 'tested');
+      file.write('tested');
 
       task.on('done', () => {
         expect(update).to.have.been.calledTwice;
@@ -81,19 +78,17 @@ describe('Task', () => {
   });
 
   it('calls the update function when a file is added', done => {
-    const filePathA = path.join(tempDir, 'index.html');
-    const filePathB = path.join(tempDir, 'index-2.html');
-    fs.writeFileSync(filePathA, 'test');
+    const fileA = create('index.html');
     const update = sinon.spy();
     task = new Task({
       pattern: '*.*',
       update
     }, {
-      baseDir: tempDir
+      baseDir: fileA.dir
     });
 
     task.init().then(() => {
-      fs.writeFileSync(filePathB, 'test');
+      create('index-2.html');
 
       task.watcher.on('add', () => {
         // Two calls for the original file, one call for the new file
@@ -104,47 +99,44 @@ describe('Task', () => {
   });
 
   it('calls the remove function when a file is removed', done => {
-    const filePath = path.join(tempDir, 'index.html');
-    fs.writeFileSync(filePath, 'test');
+    const file = create('index.html', 'test');
     const remove = sinon.spy();
     task = new Task({
       pattern: '*.*',
       remove
     }, {
-      baseDir: tempDir
+      baseDir: file.dir
     });
 
     task.init().then(() => {
-      fs.unlinkSync(filePath);
+      file.delete();
 
       task.watcher.on('unlink', () => {
-        expect(remove).to.have.been.calledWithExactly('index', filePath, undefined);
+        expect(remove).to.have.been.calledWithExactly('index', file.path, undefined);
         done();
       });
     });
   });
 
   it('allows file reading to be enabled', done => {
-    const filePath = path.join(tempDir, 'index.html');
-    fs.writeFileSync(filePath, 'test');
+    const file = create('index.html', 'test');
     const update = sinon.spy();
     task = new Task({
       pattern: '*.*',
       read: true,
       update
     }, {
-      baseDir: tempDir
+      baseDir: file.dir
     });
 
     task.init().then(() => {
-      expect(update).to.have.been.calledWithExactly('index', filePath, 'test');
+      expect(update).to.have.been.calledWithExactly('index', file.path, 'test');
       done();
     });
   });
 
   it('allows a this argument to be passed', done => {
-    const filePath = path.join(tempDir, 'index.html');
-    fs.writeFileSync(filePath, 'test');
+    const file = create('index.html', 'test');
     const spy = sinon.spy();
     const thisArg = {};
     task = new Task({
@@ -154,7 +146,7 @@ describe('Task', () => {
         spy(this);
       }
     }, {
-      baseDir: tempDir
+      baseDir: file.dir
     });
 
     task.init().then(() => {
