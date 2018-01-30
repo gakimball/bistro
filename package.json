@@ -1,0 +1,43 @@
+{
+  "name": "bistro",
+  "version": "1.0.0",
+  "description": "File-based task runner",
+  "main": "index.js",
+  "scripts": {
+    "test": "xo && mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gakimball/bistro.git"
+  },
+  "keywords": [
+    "bistro"
+  ],
+  "author": "Geoff Kimball <geoff@geoffkimball.com> (http://geoffkimball.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gakimball/bistro/issues"
+  },
+  "homepage": "https://github.com/gakimball/bistro#readme",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "del": "^3.0.0",
+    "mocha": "^3.2.0",
+    "sinon": "^4.2.2",
+    "sinon-chai": "^2.14.0",
+    "tempy": "^0.2.1",
+    "xo": "^0.18.1"
+  },
+  "engines": {
+    "node": ">=4"
+  },
+  "xo": {
+    "space": true
+  },
+  "dependencies": {
+    "chokidar": "^2.0.0",
+    "dependency-graph": "^0.7.0",
+    "is-object": "^1.0.1",
+    "p-each-series": "^1.0.0"
+  }
+}
