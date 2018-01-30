@@ -4,6 +4,8 @@
 
 [![Travis](https://img.shields.io/travis/gakimball/bistro.svg?maxAge=2592000)](https://travis-ci.org/gakimball/bistro) [![npm](https://img.shields.io/npm/v/bistro.svg?maxAge=2592000)](https://www.npmjs.com/package/bistro)
 
+Bistro is a small file-based task runner. What _file-based_ means is that every task you define is designed to react to changes to specific files, based on a glob pattern. Along with this glob pattern, each task defines `update()` and `remove()` functions, which run when files matching the pattern are added, changed, or removed. Tasks can also trigger other tasks in response.
+
 ## Installation
 
 ```bash
@@ -12,11 +14,11 @@ npm install bistro
 
 ## Usage
 
-A Bistro instances is a series of tasks that run when any file matching a glob pattern changes. A task can also be configured to run other tasks when it finishes. At minimum, a task has three config settings:
+Tasks are configured in one object, where each key is a task name and the value is the task itself. At minimum, a task should have these three properties:
 
-- A **pattern** of files to read and watch for changes to.
-- An **update** function that is called whenever a file is changed, or a new file is created.
-- A **remove** function that is called whenever a file is deleted.
+- A `pattern` of files to read and watch for changes to.
+- An `update` function that is called whenever a file is changed, or a new file is created.
+- A `remove` function that is called whenever a file is deleted.
 
 ```js
 const Bistro = require('bistro');
@@ -24,17 +26,28 @@ const Bistro = require('bistro');
 const bistro = new Bistro({
   a: {
     pattern: 'files/a/*.html',
+    update(name, path) {
+      // Do something with a new/changed file
+    },
+    remove(name, path) {
+      // Clean up after a file is deleted
+    },
+  },
+  b: {
+    pattern: 'files/b/**/*.json',
+    read: true, // Turning this on allows you to pass file contents to the below functions
     update(name, path, contents) {
       // Do something with a new/changed file
     },
     remove(name, path, contents) {
       // Clean up after a file is deleted
     },
-  }
+    run: ['a'], // You can define other tasks to run after one finishes
+  },
 });
 
-// Set up the file watchers and run tasks
-bistro.start('a');
+// Run all tasks on existing files, and set up file watchers to monitor for changes
+bistro.start();
 
 // Remove file watchers, preventing tasks from running
 bistro.stop();
@@ -58,10 +71,12 @@ Create a new task runner.
     - **name** (String): The base name of the file. A file with the path `/foo/bar.txt` has the base name of `bar`.
     - **path** (String): Absolute path to the file.
   - **run** (Array of Strings): Tasks to run after an `update()` or `remove()` function finishes. Tasks will be run in sequence.
+- **options** (Object): extra options for the task runner.
+  - **baseDir** (String): base directory to prepend to the glob patterns of each task. Defaults to `process.cwd()`.
 
 #### `bistro.start()`
 
-Start the task runner. All tasks will execute once, and then again when any of their files change. Tasks with dependencies will execute earlier.
+Start the task runner. All tasks will execute once, and then again when any of their files change. Tasks with dependencies will execute later.
 
 #### `bistro.stop()`
 
