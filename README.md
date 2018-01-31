@@ -6,6 +6,8 @@
 
 Bistro is a small file-based task runner. What _file-based_ means is that every task you define is designed to react to changes to specific files, based on a glob pattern. Along with this glob pattern, each task defines `update()` and `remove()` functions, which run when files matching the pattern are added, changed, or removed. Tasks can also trigger other tasks in response.
 
+This is not a typical task runner that handles transforming and reading/writing of files. It's more for hooking into code that needs to react to changes in the filesystem.
+
 ## Installation
 
 ```bash
@@ -14,7 +16,7 @@ npm install bistro
 
 ## Usage
 
-Tasks are configured in one object, where each key is a task name and the value is the task itself. At minimum, a task should have these three properties:
+Tasks are configured in an object, where each key is a task name and the value is the task itself. At minimum, a task should have these three properties:
 
 - A `pattern` of files to read and watch for changes to.
 - An `update` function that is called whenever a file is changed, or a new file is created.
