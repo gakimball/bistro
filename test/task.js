@@ -27,7 +27,7 @@ describe('Task', () => {
     });
   });
 
-  describe('exec()', () => {
+  describe('run()', () => {
     it('passes name and file path to an update function', () => {
       const update = sinon.spy();
       const task = new Task({
@@ -38,7 +38,7 @@ describe('Task', () => {
       });
       const filePath = path.join(fixturePath, 'one.json');
 
-      return event(task.init(), 'ready').then(() => task.exec('update', filePath)).then(() => {
+      return event(task.init(), 'ready').then(() => task.run('update', filePath)).then(() => {
         expect(update).to.have.been.calledWithExactly('one', filePath, undefined);
       });
     });
@@ -55,7 +55,7 @@ describe('Task', () => {
       const filePath = path.join(fixturePath, 'one.json');
       const fileContents = fs.readFileSync(filePath).toString();
 
-      return event(task.init(), 'ready').then(() => task.exec('update', filePath)).then(() => {
+      return event(task.init(), 'ready').then(() => task.run('update', filePath)).then(() => {
         expect(update).to.have.been.calledWithExactly('one', filePath, fileContents);
       });
     });
@@ -70,7 +70,7 @@ describe('Task', () => {
       });
       const filePath = path.join(fixturePath, 'one.json');
 
-      return event(task.init(), 'ready').then(() => task.exec('remove', filePath)).then(() => {
+      return event(task.init(), 'ready').then(() => task.run('remove', filePath)).then(() => {
         expect(remove).to.have.been.calledWithExactly('one', filePath, undefined);
       });
     });
@@ -89,13 +89,13 @@ describe('Task', () => {
       });
       const filePath = path.join(fixturePath, 'one.json');
 
-      return event(task.init(), 'ready').then(() => task.exec('update', filePath)).then(() => {
+      return event(task.init(), 'ready').then(() => task.run('update', filePath)).then(() => {
         expect(spy).to.have.been.calledWithExactly(thisArg);
       });
     });
   });
 
-  describe('run()', () => {
+  describe('runAll()', () => {
     it('runs task functions on all watched files', () => {
       const update = sinon.spy();
       const task = new Task({
@@ -105,7 +105,7 @@ describe('Task', () => {
         baseDir: fixturePath
       });
 
-      return event(task.init(), 'ready').then(() => task.run()).then(() => {
+      return event(task.init(), 'ready').then(() => task.runAll()).then(() => {
         expect(update).to.have.been.calledTwice;
       });
     });
