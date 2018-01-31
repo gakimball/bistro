@@ -10,11 +10,16 @@ chai.use(sinonChai);
 const expect = chai.expect;
 
 describe('logger()', () => {
-  beforeEach(() => {
-    sinon.stub(console, 'log');
+  before(() => {
+    // @TODO Figure out how to remove `Bistro: Hello` from Mocha console output
+    sinon.stub(console, 'log').callThrough().withArgs('Bistro: ', 'Hello');
   });
 
   afterEach(() => {
+    console.log.resetHistory();
+  });
+
+  after(() => {
     console.log.restore();
   });
 

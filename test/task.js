@@ -1,157 +1,129 @@
 /* eslint-env mocha */
 /* eslint-disable no-unused-expressions */
 
+const fs = require('fs');
 const path = require('path');
 const chai = require('chai');
 const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
-const del = require('del');
+const event = require('p-event');
+const {FSWatcher} = require('chokidar');
 const Task = require('../lib/task');
-const factory = require('./lib/file');
 
 chai.use(sinonChai);
 const expect = chai.expect;
+const fixturePath = path.join(__dirname, 'fixture');
 
 describe('Task', () => {
-  let create;
-  let task;
+  describe('init()', () => {
+    it('returns a watcher', () => {
+      const task = new Task({
+        pattern: '*.json'
+      }, {
+        baseDir: fixturePath
+      });
 
-  before(() => {
-    create = factory();
-  });
-
-  afterEach(() => {
-    task.stop();
-    return del(path.join(create.dir, '**/*'), {force: true});
-  });
-
-  it('calls the update function immediately', done => {
-    const file = create('index.html');
-    const update = sinon.spy();
-    task = new Task({
-      pattern: '*.*',
-      update
-    }, {
-      baseDir: file.dir
-    });
-
-    task.init().then(() => {
-      expect(update).to.have.been.calledOnce;
-      done();
+      expect(task.init()).to.be.an.instanceOf(FSWatcher);
     });
   });
 
-  it('calls the update function with a name and file path', done => {
-    const file = create('index.html', 'test');
-    const update = sinon.spy();
-    task = new Task({
-      pattern: '*.*',
-      update
-    }, {
-      baseDir: file.dir
+  describe('exec()', () => {
+    it('passes name and file path to an update function', () => {
+      const update = sinon.spy();
+      const task = new Task({
+        pattern: '*.json',
+        update
+      }, {
+        baseDir: fixturePath
+      });
+      const filePath = path.join(fixturePath, 'data.json');
+
+      return event(task.init(), 'ready').then(() => task.exec('update', filePath)).then(() => {
+        expect(update).to.have.been.calledWithExactly('data', filePath, undefined);
+      });
     });
 
-    task.init().then(() => {
-      expect(update).to.have.been.calledWithExactly('index', file.path, undefined);
-      done();
+    it('passes name, file path, and contents to an update function with { read: true }', () => {
+      const update = sinon.spy();
+      const task = new Task({
+        pattern: '*.json',
+        read: true,
+        update
+      }, {
+        baseDir: fixturePath
+      });
+      const filePath = path.join(fixturePath, 'data.json');
+      const fileContents = fs.readFileSync(filePath).toString();
+
+      return event(task.init(), 'ready').then(() => task.exec('update', filePath)).then(() => {
+        expect(update).to.have.been.calledWithExactly('data', filePath, fileContents);
+      });
+    });
+
+    it('passes name and file path to a remove function', () => {
+      const remove = sinon.spy();
+      const task = new Task({
+        pattern: '*.json',
+        remove
+      }, {
+        baseDir: fixturePath
+      });
+      const filePath = path.join(fixturePath, 'data.json');
+
+      return event(task.init(), 'ready').then(() => task.exec('remove', filePath)).then(() => {
+        expect(remove).to.have.been.calledWithExactly('data', filePath, undefined);
+      });
+    });
+
+    it('passes this argument', () => {
+      const spy = sinon.spy();
+      const thisArg = {};
+      const task = new Task({
+        pattern: '*.json',
+        thisArg,
+        update() {
+          spy(this);
+        }
+      }, {
+        baseDir: fixturePath
+      });
+      const filePath = path.join(fixturePath, 'data.json');
+
+      return event(task.init(), 'ready').then(() => task.exec('update', filePath)).then(() => {
+        expect(spy).to.have.been.calledWithExactly(thisArg);
+      });
     });
   });
 
-  it('calls the update function when a file changes', done => {
-    const file = create('index.html', 'test');
-    const update = sinon.spy();
-    task = new Task({
-      pattern: '*.*',
-      update
-    }, {
-      baseDir: file.dir
-    });
+  describe('run()', () => {
+    it('runs task functions on all watched files', () => {
+      const update = sinon.spy();
+      const task = new Task({
+        pattern: '*.json',
+        update
+      }, {
+        baseDir: fixturePath
+      });
 
-    task.init().then(() => {
-      file.write('tested');
-
-      task.on('done', () => {
+      return event(task.init(), 'ready').then(() => task.run()).then(() => {
         expect(update).to.have.been.calledTwice;
-        done();
       });
     });
   });
 
-  it('calls the update function when a file is added', done => {
-    const fileA = create('index.html');
-    const update = sinon.spy();
-    task = new Task({
-      pattern: '*.*',
-      update
-    }, {
-      baseDir: fileA.dir
-    });
-
-    task.init().then(() => {
-      create('index-2.html');
-
-      task.watcher.on('add', () => {
-        // Two calls for the original file, one call for the new file
-        expect(update).to.have.been.calledThrice;
-        done();
+  describe('stop()', () => {
+    it('stops the watcher', () => {
+      const task = new Task({
+        pattern: '*.json'
+      }, {
+        baseDir: fixturePath
       });
-    });
-  });
 
-  it('calls the remove function when a file is removed', done => {
-    const file = create('index.html', 'test');
-    const remove = sinon.spy();
-    task = new Task({
-      pattern: '*.*',
-      remove
-    }, {
-      baseDir: file.dir
-    });
-
-    task.init().then(() => {
-      file.delete();
-
-      task.watcher.on('unlink', () => {
-        expect(remove).to.have.been.calledWithExactly('index', file.path, undefined);
-        done();
+      return event(task.init(), 'ready').then(() => {
+        const spy = sinon.spy(task.watcher, 'close');
+        task.stop();
+        expect(spy).to.have.been.calledOnce;
       });
-    });
-  });
-
-  it('allows file reading to be enabled', done => {
-    const file = create('index.html', 'test');
-    const update = sinon.spy();
-    task = new Task({
-      pattern: '*.*',
-      read: true,
-      update
-    }, {
-      baseDir: file.dir
-    });
-
-    task.init().then(() => {
-      expect(update).to.have.been.calledWithExactly('index', file.path, 'test');
-      done();
-    });
-  });
-
-  it('allows a this argument to be passed', done => {
-    const file = create('index.html', 'test');
-    const spy = sinon.spy();
-    const thisArg = {};
-    task = new Task({
-      pattern: '*.*',
-      thisArg,
-      update() {
-        spy(this);
-      }
-    }, {
-      baseDir: file.dir
-    });
-
-    task.init().then(() => {
-      expect(spy).to.have.been.calledWithExactly(thisArg);
-      done();
     });
   });
 });

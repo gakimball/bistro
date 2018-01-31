@@ -1,3 +1,4 @@
+const path = require('path');
 const isObject = require('is-object');
 const eachSeries = require('p-each-series');
 const Task = require('./lib/task');
@@ -8,36 +9,45 @@ module.exports = class Bistro {
   /**
    * Create a new task runner.
    * @param {Object.<String, Object>} tasks - Tasks to run.
-   * @param {Object} options - Extra options.
+   * @param {Object} [options={}] - Extra options.
    */
-  constructor(tasks, options) {
+  constructor(tasks, options = {}) {
     if (!isObject(tasks)) {
       throw new Error('Task list must be an object.');
     }
 
     this.taskConfigs = tasks;
-    this.tasks = new Set();
-    this.options = options;
-    this.order = createDependencyGraph(this.tasks);
+    this.tasks = new Map();
+    this.options = Object.assign({
+      baseDir: process.cwd(),
+      verbose: false
+    }, options);
+    this.graph = createDependencyGraph(this.taskConfigs);
     this.log = logger(this.options.verbose);
-
-    this.setup();
   }
 
   /**
    * Start the task runner.
+   * @returns {Promsie} Promise which resolves when the initial run of tasks has been completed.
    */
   start() {
     this.log('Initialized all tasks');
 
-    eachSeries(this.graph.overallOrder().map(taskName => {
+    return eachSeries(this.graph.overallOrder(), taskName => new Promise(resolve => {
       const task = new Task(this.taskConfigs[taskName], {
         baseDir: this.options.baseDir
       });
 
-      this.tasks.add(task);
-      return task.init();
-    })).then(() => this.log('All tasks initialized'));
+      this.tasks.set(taskName, task);
+      task.init()
+        .on('ready', () => {
+          task.run().then(resolve);
+        })
+        .on('add', filePath => this.runTask(taskName, 'update', filePath))
+        .on('change', filePath => this.runTask(taskName, 'update', filePath))
+        .on('unlink', filePath => this.runTask(taskName, 'remove', filePath));
+    }))
+      .then(() => this.log('All tasks initialized'));
   }
 
   /**
@@ -50,33 +60,27 @@ module.exports = class Bistro {
   }
 
   /**
-   * Run a series of tasks in sequence.
+   * Run a task on a file. Dependent tasks will be run in sequence after.
    * @private
-   * @param {String[]} tasks - Names of tasks to run, in order.
-   * @returns {Promise} Promise which resolves when all tasks have run.
-   */
-  runSequence(tasks) {
-    this.log(`Running tasks ${tasks.join(', ')}`);
-    return eachSeries(tasks.map(taskName => this.runTask(taskName))).then(() => {
-      this.log(`Done running tasks ${tasks.join(', ')}`);
-    });
-  }
-
-  /**
-   * Run a single task. Dependent tasks will be run in sequence after.
    * @param {String} taskName - Name of task.
-   * @returns {Promise} Promise that resolves when the task and its dependents have been run.
+   * @param {String} method - Task method to run. Should be `update` or `remove`.
+   * @param {String} fileName - File to run task on.
+   * @returns {Promise} Promise which resolves when the base task and all of its dependencies
+   * have finished.
    */
-  runTask(taskName) {
-    const task = this.tasks[taskName];
-    this.log(`Running task ${taskName}`);
+  runTask(taskName, method, fileName) {
+    const task = this.tasks.get(taskName);
 
-    return task.run().then(() => {
-      const dependencies = this.graph.dependantsOf(taskName);
+    this.log(`Running task ${taskName} on ${path.basename(fileName)}`);
+
+    return task.exec(method, fileName).then(() => {
+      const dependencies = this.graph.dependantsOf(taskName).reverse();
+
       this.log(`Done running task ${taskName}, now running dependencies ${dependencies.join(', ')}`);
-      return this.runSequence(dependencies).then(() => {
-        this.log(`Done running dependencies of ${taskName}`);
-      });
+
+      return eachSeries(dependencies, taskName => this.tasks.get(taskName).run());
+    }).then(() => {
+      this.log(`Done running dependencies of ${taskName}`);
     });
   }
 };
