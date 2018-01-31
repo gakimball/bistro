@@ -30,10 +30,7 @@ describe('Bistro', () => {
           pattern: '*'
         }
       });
-      expect(b).to.have.property('options').eql({
-        baseDir: __dirname,
-        verbose: false
-      });
+      expect(b).to.have.deep.property('options.baseDir', __dirname);
     });
   });
 
@@ -53,6 +50,29 @@ describe('Bistro', () => {
 
       return b.start().then(() => {
         expect(update).to.have.been.calledOnce;
+      });
+    });
+
+    it('runs a callback when everything is done', () => {
+      const onTaskFinish = sinon.spy();
+      const createFile = createFolder();
+      const file = createFile('index.html');
+      const b = new Bistro({
+        task: {
+          pattern: '*'
+        }
+      }, {
+        baseDir: file.dir,
+        onTaskFinish
+      });
+
+      return b.start().then(() => {
+        expect(onTaskFinish).to.have.been.calledWithExactly({
+          taskName: null,
+          dependencies: ['task'],
+          method: 'update',
+          fileName: null
+        });
       });
     });
 
@@ -199,6 +219,33 @@ describe('Bistro', () => {
         return b.runTask('one', 'update', file.path);
       }).then(() => {
         expect(order).to.eql(['one', 'two', 'three', 'four']);
+      });
+    });
+
+    it('runs a callback with task info', () => {
+      const createFile = createFolder();
+      const file = createFile('index.html');
+      const onTaskFinish = sinon.spy();
+      const b = new Bistro({
+        one: {
+          pattern: '*',
+          run: ['two']
+        },
+        two: {
+          pattern: '*'
+        }
+      }, {
+        baseDir: file.dir,
+        onTaskFinish
+      });
+
+      return b.start().then(() => b.runTask('one', 'update', file.path)).then(() => {
+        expect(onTaskFinish).to.have.been.calledWithExactly({
+          taskName: 'one',
+          method: 'update',
+          dependencies: ['two'],
+          fileName: file.path
+        });
       });
     });
   });

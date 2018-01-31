@@ -75,6 +75,14 @@ Create a new task runner.
   - **run** (Array of Strings): Tasks to run after an `update()` or `remove()` function finishes. Tasks will be run in sequence.
 - **options** (Object): extra options for the task runner.
   - **baseDir** (String): base directory to prepend to the glob patterns of each task. Defaults to `process.cwd()`.
+  - **onTaskFinish** (Function): callback to run when a task and all of its dependencies have run. The function is called with one parameter, an object with these properties:
+    - **taskName** (String): name of task that ran.
+      - On the initial run, this will be `null`.
+    - **dependencies** (Array of Strings): tasks that ran after the initial task, in order.
+      - On the initial run, this will contain every task.
+    - **method** (String): task function called. Will be `update` or `remove`.
+    - **fileName** (String): path to file that was changed or removed.
+      - On the initial run, this will be `null`.
 
 #### `bistro.start()`
 
