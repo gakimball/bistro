@@ -36,10 +36,10 @@ describe('Task', () => {
       }, {
         baseDir: fixturePath
       });
-      const filePath = path.join(fixturePath, 'data.json');
+      const filePath = path.join(fixturePath, 'one.json');
 
       return event(task.init(), 'ready').then(() => task.exec('update', filePath)).then(() => {
-        expect(update).to.have.been.calledWithExactly('data', filePath, undefined);
+        expect(update).to.have.been.calledWithExactly('one', filePath, undefined);
       });
     });
 
@@ -52,11 +52,11 @@ describe('Task', () => {
       }, {
         baseDir: fixturePath
       });
-      const filePath = path.join(fixturePath, 'data.json');
+      const filePath = path.join(fixturePath, 'one.json');
       const fileContents = fs.readFileSync(filePath).toString();
 
       return event(task.init(), 'ready').then(() => task.exec('update', filePath)).then(() => {
-        expect(update).to.have.been.calledWithExactly('data', filePath, fileContents);
+        expect(update).to.have.been.calledWithExactly('one', filePath, fileContents);
       });
     });
 
@@ -68,10 +68,10 @@ describe('Task', () => {
       }, {
         baseDir: fixturePath
       });
-      const filePath = path.join(fixturePath, 'data.json');
+      const filePath = path.join(fixturePath, 'one.json');
 
       return event(task.init(), 'ready').then(() => task.exec('remove', filePath)).then(() => {
-        expect(remove).to.have.been.calledWithExactly('data', filePath, undefined);
+        expect(remove).to.have.been.calledWithExactly('one', filePath, undefined);
       });
     });
 
@@ -87,7 +87,7 @@ describe('Task', () => {
       }, {
         baseDir: fixturePath
       });
-      const filePath = path.join(fixturePath, 'data.json');
+      const filePath = path.join(fixturePath, 'one.json');
 
       return event(task.init(), 'ready').then(() => task.exec('update', filePath)).then(() => {
         expect(spy).to.have.been.calledWithExactly(thisArg);

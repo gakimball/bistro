@@ -1,7 +1,6 @@
 /* eslint-env mocha */
 /* eslint-disable no-unused-expressions */
 
-const path = require('path');
 const chai = require('chai');
 const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
@@ -20,19 +19,19 @@ describe('Bistro', () => {
     it('copies task configs and options', () => {
       const b = new Bistro({
         task: {
-          pattern: '*.json'
+          pattern: '*'
         }
       }, {
-        baseDir: path.join(__dirname, 'fixture')
+        baseDir: __dirname
       });
 
       expect(b).to.have.property('taskConfigs').eql({
         task: {
-          pattern: '*.json'
+          pattern: '*'
         }
       });
       expect(b).to.have.property('options').eql({
-        baseDir: path.join(__dirname, 'fixture'),
+        baseDir: __dirname,
         verbose: false
       });
     });
