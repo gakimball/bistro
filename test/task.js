@@ -1,13 +1,15 @@
 /* eslint-env mocha */
 /* eslint-disable no-unused-expressions */
 
+'use strict';
+
 const fs = require('fs');
 const path = require('path');
 const chai = require('chai');
 const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
 const event = require('p-event');
-const {FSWatcher} = require('chokidar');
+const chokidar = require('chokidar');
 const Task = require('../lib/task');
 
 chai.use(sinonChai);
@@ -23,7 +25,7 @@ describe('Task', () => {
         baseDir: fixturePath
       });
 
-      expect(task.init()).to.be.an.instanceOf(FSWatcher);
+      expect(task.init()).to.be.an.instanceOf(chokidar.FSWatcher);
     });
   });
 

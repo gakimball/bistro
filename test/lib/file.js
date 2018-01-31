@@ -1,3 +1,5 @@
+'use strict';
+
 const fs = require('fs');
 const path = require('path');
 const tempy = require('tempy');
@@ -5,9 +7,9 @@ const tempy = require('tempy');
 module.exports = () => {
   const tempDir = tempy.directory();
 
-  function createFile(fileName, contents = 'test') {
+  function createFile(fileName, contents) {
     const filePath = path.join(tempDir, fileName);
-    fs.writeFileSync(filePath, contents);
+    fs.writeFileSync(filePath, contents || 'test');
 
     return {
       path: filePath,

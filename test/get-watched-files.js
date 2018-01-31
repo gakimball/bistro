@@ -1,7 +1,9 @@
 /* eslint-env mocha */
 
+'use strict';
+
 const path = require('path');
-const {expect} = require('chai');
+const expect = require('chai').expect;
 const getWatchedFiles = require('../lib/get-watched-files');
 
 describe('getWatchedFiles()', () => {

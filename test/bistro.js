@@ -1,6 +1,8 @@
 /* eslint-env mocha */
 /* eslint-disable no-unused-expressions */
 
+'use strict';
+
 const chai = require('chai');
 const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
