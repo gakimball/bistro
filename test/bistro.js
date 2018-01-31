@@ -19,7 +19,7 @@ describe('Bistro', () => {
     it('copies task configs and options', () => {
       const b = new Bistro({
         task: {
-          pattern: '*'
+          pattern: '*.test'
         }
       }, {
         baseDir: __dirname
@@ -27,7 +27,7 @@ describe('Bistro', () => {
 
       expect(b).to.have.property('taskConfigs').eql({
         task: {
-          pattern: '*'
+          pattern: '*.test'
         }
       });
       expect(b).to.have.deep.property('options.baseDir', __dirname);
@@ -38,10 +38,10 @@ describe('Bistro', () => {
     it('runs all tasks', () => {
       const update = sinon.spy();
       const createFile = createFolder();
-      const file = createFile('index.html');
+      const file = createFile('index.test');
       const b = new Bistro({
         task: {
-          pattern: '*',
+          pattern: '*.test',
           update
         }
       }, {
@@ -56,7 +56,7 @@ describe('Bistro', () => {
     it('runs a callback when everything is done', () => {
       const onTaskFinish = sinon.spy();
       const createFile = createFolder();
-      const file = createFile('index.html');
+      const file = createFile('index.test');
       const b = new Bistro({
         task: {
           pattern: '*'
@@ -79,10 +79,10 @@ describe('Bistro', () => {
     it('runs a task when a file changes', () => {
       const update = sinon.spy();
       const createFile = createFolder();
-      const file = createFile('index.html');
+      const file = createFile('index.test');
       const b = new Bistro({
         task: {
-          pattern: '*',
+          pattern: '*.test',
           update
         }
       }, {
@@ -99,10 +99,10 @@ describe('Bistro', () => {
     it('runs a task when a file is added', () => {
       const update = sinon.spy();
       const createFile = createFolder();
-      const file = createFile('index.html');
+      const file = createFile('index.test');
       const b = new Bistro({
         task: {
-          pattern: '*',
+          pattern: '*.test',
           update
         }
       }, {
@@ -111,7 +111,7 @@ describe('Bistro', () => {
       const assert = () => expect(update).to.have.been.calledTwice;
 
       return b.start().then(() => {
-        createFile('index-2.html');
+        createFile('index-2.test');
         setTimeout(assert, 500);
       });
     });
@@ -119,10 +119,10 @@ describe('Bistro', () => {
     it('runs a task when a file is deleted', () => {
       const remove = sinon.spy();
       const createFile = createFolder();
-      const file = createFile('index.html');
+      const file = createFile('index.test');
       const b = new Bistro({
         task: {
-          pattern: '*',
+          pattern: '*.test',
           remove
         }
       }, {
@@ -140,11 +140,11 @@ describe('Bistro', () => {
   describe('stop()', () => {
     it('stops running tasks', () => {
       const createFile = createFolder();
-      const file = createFile('index.html');
+      const file = createFile('index.test');
       const update = sinon.spy();
       const b = new Bistro({
         task: {
-          pattern: '*',
+          pattern: '*.test',
           update
         }
       }, {
@@ -162,11 +162,11 @@ describe('Bistro', () => {
   describe('runTask()', () => {
     it('runs a single task for one file', () => {
       const createFile = createFolder();
-      const file = createFile('index.html');
+      const file = createFile('index.test');
       const update = sinon.spy();
       const b = new Bistro({
         task: {
-          pattern: '*',
+          pattern: '*.test',
           update
         }
       }, {
@@ -180,32 +180,32 @@ describe('Bistro', () => {
 
     it('runs dependant tasks after', () => {
       const createFile = createFolder();
-      const file = createFile('index.html');
+      const file = createFile('index.test');
       const order = [];
       const b = new Bistro({
         one: {
-          pattern: '*',
+          pattern: '*.test',
           update() {
             order.push('one');
           },
           run: ['two']
         },
         two: {
-          pattern: '*',
+          pattern: '*.test',
           update() {
             order.push('two');
           },
           run: ['three']
         },
         three: {
-          pattern: '*',
+          pattern: '*.test',
           update() {
             order.push('three');
           },
           run: ['four']
         },
         four: {
-          pattern: '*',
+          pattern: '*.test',
           update() {
             order.push('four');
           }
@@ -224,15 +224,15 @@ describe('Bistro', () => {
 
     it('runs a callback with task info', () => {
       const createFile = createFolder();
-      const file = createFile('index.html');
+      const file = createFile('index.test');
       const onTaskFinish = sinon.spy();
       const b = new Bistro({
         one: {
-          pattern: '*',
+          pattern: '*.test',
           run: ['two']
         },
         two: {
-          pattern: '*'
+          pattern: '*.test'
         }
       }, {
         baseDir: file.dir,
