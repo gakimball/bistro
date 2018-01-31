@@ -4,7 +4,7 @@
 const chai = require('chai');
 const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
-const Bistro = require('..');
+const Bistro = require('../lib/bistro');
 const createFolder = require('./lib/file');
 
 chai.use(sinonChai);
