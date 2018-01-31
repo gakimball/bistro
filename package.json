@@ -21,7 +21,6 @@
   "homepage": "https://github.com/gakimball/bistro#readme",
   "devDependencies": {
     "chai": "^3.5.0",
-    "del": "^3.0.0",
     "mocha": "^3.2.0",
     "p-event": "^1.3.0",
     "sinon": "^4.2.2",
